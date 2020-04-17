@@ -1,0 +1,259 @@
+---
+title: 'Module 7: Data visualization with ggplot2'
+author: "ThuyTien Bui"
+date: "17 April 2020"
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
+footer: 'Biomedical data analysis with R: Intro series. Thuy Tien Bui'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## 7 layers of graphics
+Function |	Returns
+------------- | -------------
+Data	| The dataframe being plotted
+Aesthetic | The scales onto which we map our data.
+Geometry	| The visual elements (type of plot) used for our data.
+Facet	| Plotting small multiples.
+Statistics	| Representations of our data to aid understanding.
+Coordinates	| The space on which the data will be plotted.
+Themes	| All non-data ink.
+
+
+## GGplot2 layers - Data
+
+## The Iris dataset 
+<Insert picture>
+
+```{r data, echo = T, warning=FALSE, message=FALSE}
+# install.packages(tidyverse)
+library(tidyverse)
+data(iris)
+head(iris)  
+glimpse(iris)   # view the data frame
+```
+
+
+## GGplot2 layers - Aesthetics
+
+Mapping Sepal length to X axis and Sepal Width to Y axis 
+```{r aes mapping, echo = T, fig.align='center', fig.width=3, fig.height=3}
+g <- ggplot(data = iris, mapping = aes (x = Sepal.Length, y = Sepal.Width))
+g
+```
+
+No plot produced yet !
+
+## GGplot2 layers - Geometry
+```{r geom, echo = T, fig.align='center', fig.width=3, fig.height=3}
+g <- ggplot(data = iris, mapping = aes (x = Sepal.Length, y = Sepal.Width)) +
+      geom_jitter()
+g
+```
+
+## GGplot2 layers - Facet
+```{r facet, echo = T, fig.align='center', fig.width=6, fig.height=3}
+g <- ggplot(data = iris, mapping = aes (x = Sepal.Length, y = Sepal.Width)) +
+      geom_jitter(alpha = 0.6) + 
+      facet_grid(. ~ Species)
+g
+```
+
+## GGplot2 layers - Statistics
+```{r stat, echo = T, fig.align='center', fig.width=6, fig.height=3}
+g <- ggplot(data = iris, mapping = aes (x = Sepal.Length, y = Sepal.Width)) +
+      geom_jitter(alpha = 0.6) + 
+      facet_grid(. ~ Species) + 
+      stat_smooth(method = "lm", se = F, col = "red")
+g
+```
+
+## GGplot2 layers - Coordinates
+```{r coord, echo = T, fig.align='center', fig.width=6, fig.height=3}
+g <- ggplot(data = iris, mapping = aes (x = Sepal.Length, y = Sepal.Width)) +
+      geom_jitter(alpha = 0.6) + 
+      facet_grid(. ~ Species) + 
+      stat_smooth(method = "lm", se = F, col = "red") +
+      coord_equal()
+g
+```
+
+## GGplot2 layers - Themes
+```{r theme, echo = T, fig.align='center', fig.width=6, fig.height=3}
+g <- ggplot(data = iris, mapping = aes (x = Sepal.Length, y = Sepal.Width)) +
+      geom_jitter(alpha = 0.6) + 
+      facet_grid(. ~ Species) + 
+      stat_smooth(method = "lm", se = F, col = "red") +
+      coord_equal() +
+      theme_classic()
+g
+```
+
+## 7 layers of graphics
+Function |	Returns
+------------- | -------------
+**Data**	| The *dataframe* being plotted
+**Aesthetic** | The scales onto which we map our data.
+**Geometry**	| The visual elements (type of plot) used for our data.
+Facet	| Plotting small multiples.
+Statistics	| Representations of our data to aid understanding.
+Coordinates	| The space on which the data will be plotted.
+**Themes**	| All non-data ink.
+
+In today's session, I will go through the 4 elements: *Data*, *Aesthetic*, *Geometry*, and *Themes*. 
+
+The rest will be touch and go with examples
+
+## Visible aesthetics
+## Mapping onto the X and Y axes
+
+Scatter plot between sepal width and length. 
+```{r, echo = T, fig.align='center', fig.width=3, fig.height=3}
+g <- ggplot(data = iris, mapping = aes(x = Sepal.Length, 
+                                       y = Sepal.Width))+
+        geom_point()
+g
+```
+They are categorical variables
+
+## Mapping onto colors
+Scatter plot between sepal width and length. Colored by species
+```{r, echo = T, fig.align='center', fig.width=5, fig.height=3}
+g <- ggplot(data = iris, mapping = aes(x = Sepal.Length, 
+                                       y = Sepal.Width,
+                                       color = Species ))+
+        geom_point()
+g
+```
+
+## Mapping onto colors aesthetics
+Scatter plot between sepal width and length. Colored by species
+```{r, echo = T, fig.align='center', fig.width=5, fig.height=3 }
+g <- ggplot(data = iris, mapping = aes(x = Sepal.Length, 
+                                       y = Sepal.Width,
+                                       color = Species ))+
+        geom_point()
+g
+```
+
+```{r, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl <- " 
+| Type          | Variable      |
+|---------------|:-------------:|
+| Color         | Species       |
+"
+cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
+```
+**Species**, a dataframe column, is mapped onto color, a visible aesthetic.
+
+## Mapping onto colors aesthetics in geom
+Scatter plot between sepal width and length. Colored by species
+```{r, echo = T, fig.align='center', fig.width=3, fig.height=3}
+g <- ggplot(data = iris) +
+        geom_point(mapping = aes(x = Sepal.Length, 
+                                 y = Sepal.Width,
+                                 color = Species ))
+g
+```
+
+Only necessary if:
+* All layers should not inherit the same aesthetics
+* Mixing different data sources
+
+## Typical visible aesthetics
+
+```{r, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl <- " 
+| Aesthetic     | Description   |
+|---------------|:-------------:|
+| x             | X axis position
+| y             | Y axis position
+| fill          | Fill color
+| color         | Color of points, outlines of other geoms
+| size          | Area or radius of points, thickness of lines
+| alpha         | Transparency
+| linetype      | line dash pattern
+| labels        | Text on a plot or axes
+| shape         | Shape
+"
+cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
+```
+
+## Using attributes - example
+```{r, echo = T, fig.align='center', fig.width=3, fig.height=3}
+g <- ggplot(data = iris, mapping = aes(x = Sepal.Length, 
+                                       y = Sepal.Width  )) +
+        geom_point(color = "red")
+g
+```
+The **color** attribute is set to **"red"**
+Attribute is set inside geom_*()
+
+## Using attributes - another example
+```{r, echo = T, fig.align='center', fig.width=3, fig.height=3}
+g <- ggplot(data = iris, mapping = aes(x = Sepal.Length, 
+                                       y = Sepal.Width  )) +
+        geom_point(shape = 4)
+g
+```
+The **size** attribute is set to **"red"**
+Attribute is set inside geom_*()
+
+## Aesthetics? Attributes?
+
+Aesthetics are defined inside aes() in ggplot syntax and attributes are outside the aes().
+```{r echo = T, results='hide'}
+g <- ggplot(data = iris, mapping = aes(x = Sepal.Length, 
+                                       y = Sepal.Width,
+                                       color = Species)) +  # color mapped to Species variable
+        geom_point(shape = 4)   # scatter dot size set at 10 unit, which is a constant
+g
+```
+We typically understand aesthetics as how something looks, color, size etc.
+But in ggplot's world how things look is just an attribute.
+
+Aesthetics do not refer how something looks, but to which **variable**, or dataframe **column** is mapped onto it.
+Attributes refer to the property of the plot, and is set at a constant value (e.g ```color = "red"```, ```size = 10``` )
+
+## Appendix - scatter point shapes reference
+To 
+
+
+
+
+
+
+
+
+
+
+
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
