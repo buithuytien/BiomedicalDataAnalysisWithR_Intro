@@ -1,0 +1,515 @@
+---
+title: "Module 7_R programming"
+author: "ThuyTien Bui"
+date: "3 May 2020"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Data structures in R
+
+- R's base data structures can be organised by their dimensionality (1d, 2d, or nd) and whether they're homogeneous (all contents must be of the same type) or heterogeneous (the contents can be of different types). This gives rise to the five data types most often used in data analysis:
+
+Dimension | Homogeneous   | Heterogenuous
+--------- | ------------- | -------------
+ 1D       | Atomic vector | List
+ 2D       | Matrix        | Data frame
+ n-D      | Array
+ 
+ - Almost all other objects are built upon these foundations
+ - Individual numbers or strings or boolean, are actually vectors of length one.
+
+## Atomic vector
+- There are four common types of atomic vectors: logical, integer, double (often called numeric), and character.
+- Atomic vectors are usually created with c(), short for combine:
+
+```{r, echo = T}
+dbl_var <- c(1, 2.5, 4.5)
+
+# With the L suffix, you get an integer rather than a double
+int_var <- c(1L, 6L, 10L)
+
+# Use TRUE and FALSE (or T and F) to create logical vectors
+log_var <- c(TRUE, FALSE, T, F)
+
+chr_var <- c("these are", "some strings")
+```
+
+- Atomic vectors are always flat, even if you nest c()'s:
+
+```{r, echo = T}
+c(1, c(2, c(3, 4)))
+#> [1] 1 2 3 4
+# the same as
+c(1, 2, 3, 4)
+#> [1] 1 2 3 4
+```
+
+
+## Type and test
+Given a vector, you can determine its type with ```typeof()```, or check if it's a specific type with an "is" function: ```is.character()```, ```is.double()```, ```is.integer()```, ```is.logical()```, or, more generally, ```is.atomic()``` .
+
+```{r, echo = T}
+dbl_var <- c(1, 2.5, 4.5)
+typeof(dbl_var)
+
+is.double(dbl_var)
+
+is.atomic(dbl_var)
+```
+
+
+## Coercion 
+- All elements of an atomic vector must be the same type, so when you attempt to combine different types they will be **coerced** to the most flexible type. Types from least to most flexible are: logical, integer, double, and character.
+
+```{r, echo = T}
+str(c("a", 1))
+```
+
+- When a logical vector is coerced to an integer or double, TRUE becomes 1 and FALSE becomes 0. This is very useful in conjunction with sum() and mean().
+
+```{r, echo = T}
+x <- c(FALSE, FALSE, TRUE)
+as.numeric(x)
+
+# Total number of TRUEs
+sum(x)
+
+# Proportion that are TRUE
+mean(x)
+```
+
+## Naming a vector
+You can name a vector in three ways:
+
+```{r, echo = T}
+# When creating it: 
+x <- c(a = 1, b = 2, c = 3)
+
+# By assigning a character vector to names()
+x <- 1:3
+names(x) <- c("a", "b", "c")
+
+# Inline, with setNames():
+x <- setNames(1:3, c("a", "b", "c"))
+```
+
+## Matrix
+- Similar to atomic vector, matrix contains data of the same type, but in 2-dimension
+- You can create matrices and arrays with matrix(), or by using the assignment form of dim():
+```{r, echo = T}
+a <- matrix(1:6, nrow = 2, ncol = 3)
+a
+
+# You can also modify an object in place by setting dim()
+b <- 1:6
+dim(b) <- b(3, 2)
+```
+
+
+## Factor
+- Used for Categorical data, where values come from a fixed set of levels recorded in ***factor*** vectors.
+- ```levels``` of factor defines the set of allowed values.
+
+```{r, echo = T}
+x <- factor(c("a", "b", "b", "a"))
+x
+```
+
+- When reading in csv data (or any table-formatted data), R functions like read.csv and data.frame automatically conver character vectors into factors.
+- If you want to suppress this behaviour, set the argument ```stringsAsFactors = FALSE```
+
+## Ordered actor
+- For ordinal variable (categorical with clear ordering)
+```{r, echo=T}
+grade <- ordered(c("b", "b", "a", "c"), levels = c("c", "b", "a"))
+grade
+```
+
+## Other special vectors
+- Dates: built on top of double vector
+- Date-times
+- Durations
+
+```{r, echo = T}
+# Date
+today <- Sys.Date()
+date <- as.Date("1970-02-01")
+
+# Date-times
+now_ct <- as.POSIXct("2018-08-01 22:00", tz = "UTC")
+now_ct
+
+# Duration 
+one_week_1 <- as.difftime(1, units = "weeks")
+```
+
+## List
+- Lists are a step up in complexity from atomic vectors: each element can be any type, not just vectors.
+- We can construct a list with ```list()``` function
+- We can name components of a list by ```names()``` function, or directly name inside the ```list``` function
+- The ```typeof()``` a list is list. You can test for a list with ```is.list()```, and coerce to a list with ```as.list()``` .
+
+```{r, echo = T}
+my_list <- list(1:3, c("a","b","c"))
+names(my_list) <- c("num_vec", "char_vec")
+my_list
+  
+my_list2 <- list("ml1" = 1, "ml2"="abc")
+my_list
+
+```
+
+## Dataframe and tibble
+- Built on top of lists, both are named lists of vectors
+- Tibbles are provided by the tibble package and share the same structure as data frames. The only difference is that the class vector is longer, and includes tbl_df. This allows tibbles to behave differently :
+1. tibbles never coerce their input
+
+```{r, echo = T, message=FALSE}
+library(tibble)
+
+df2 <- tibble(x = 1:3, y = letters[1:3])
+df2
+str(df2)
+```
+
+2.  while data frames automatically transform non-syntactic names (unless check.names = FALSE), tibbles do not
+```{r, echo = T}
+names(data.frame(`1` = 1))
+names(tibble(`1` = 1))
+```
+
+3. While every element of a data frame (or tibble) must have the same length, both data.frame() and tibble() will recycle shorter inputs. However, while data frames automatically recycle columns that are an integer multiple of the longest column, tibbles will only recycle vectors of length one.
+```{r, echo = T}
+# data frame recycle
+data.frame(x = 1:4, y = 1:2)
+
+# this will throw an error
+data.frame(x = 1:4, y = 1:2)
+
+# second column is of length 1, recycling happens without error
+tibble(x = 1:4, y=1)
+
+# this will throw an error
+tibble(x = 1:4, y=1:2)
+
+```
+
+4. tibble() allows us to refer to variables created during constructionm, while data frame cannot
+```{r, echo = T}
+tibble(
+  x = 1:3,
+  y = x * 2
+)
+```
+
+## NULL
+- NULL has a unique type, is always length zero
+- Commonly used to an empty vector (a vector of length zero) of arbitrary type. For example, if you use c() but don't include any arguments, you get NULL, and concatenating NULL to a vector will leave it unchanged
+
+```{r, echo = T}
+c()
+```
+
+## subsetting
+- There are three subsetting operators, ```[[```, ```[```, and ```$```.
+- Subsetting operators interact differently with different vector types (e.g., atomic vectors, lists, factors, matrices, and data frames).
+- Subsetting can be combined with assignment.
+
+## Subsetting atomic vector
+- Positive integers return elements at the specified positions. The first element is at position 1 (most programming language the first element is at position 0) 
+- Negative integers exclude elements at the specified positions
+
+```{r, echo = T}
+x <- c(2.1, 4.2, 3.3, 5.4)
+x[c(1,3,5)] # position 5 is linked in NA
+x[c(-1,-3)] # exclude position 1 and 3
+
+# exclude element 2 and 4
+x[c(T, F, T, F)]
+
+# exclude element 2 and 4. Notice how the recycling rule is applied.
+x[c(T, F)]
+```
+
+## Subsetting atomic vector (cont.)
+- Logical vectors select elements where the corresponding logical value is TRUE. Recycing rule applied
+```{r, echo = T}
+x
+
+# exclude element 2 and 4
+x[c(T, F, T, F)]
+
+# exclude element 2 and 4. Notice how the recycling rule is applied.
+x[c(T, F)]
+```
+
+- If the vector is named, you can also use character vectors to return elements with matching names.
+```{r, echo = T}
+names(x) <- letters[1:4]
+x
+
+# subset by names
+x[c("a","c")]
+```
+
+## subsetting a list
+- Subsetting a list works in the same way as subsetting an atomic vector. Using ```[``` always returns a list; ```[[``` and ```$``` let you pull out elements of a list.
+
+```{r, echo = T}
+my_list <- list("a" = 1:5, "b"=letters[3:7], "c"=LETTERS[9:15])
+my_list
+
+# access the first element only, return the vector 1:5
+my_list[[1]]  
+my_list[["a"]]
+
+# access the first element only by its name, return a vector 1:5
+my_list$a
+
+# access the first and third element, return a sub-list
+my_list[c(1,3)]
+```
+- Note that ```$``` is invalid for atomic vector.
+
+## subsetting matrix
+- The most common way: supply a 1D index for each dimension, separated by a comma.
+- Blank subsetting lets us keep all rows or all columns.
+```{r, echo = T}
+a <- matrix(1:9, nrow = 3)
+colnames(a) <- c("A", "B", "C")
+a
+
+# first 2 rows, all columns
+a[1:2, ]
+
+# return row #1 and #3 of column B and A. Notice how recylcing rule applies here.
+a[c(TRUE, FALSE), c("B", "A")]
+
+# row 0 is empty. exclude the 2nd column
+a[0, -2]
+```
+
+- We can also subset with single 1D vector. Note that matrices/arrays in R are stored in column-major order
+```{r, echo = T}
+vals <- outer(1:5, 1:5, FUN = "paste", sep = ",")
+vals
+vals[c(4, 15)]
+```
+
+## subsetting dataframe
+- We already use ```dplyr``` package for this. ```dplyr``` is an powerful tool, but we can also use the base subsetting operator
+- Data frames have the characteristics of both lists and matrices:
+-- When subsetting with a single index, they behave like lists and index the columns, so df[1:2] selects the first two columns.
+-- When subsetting with two indices, they behave like matrices, so df[1:3, ] selects the first three rows and all the columns.
+
+```{r, echo = T}
+my_df <- data.frame(x = 1:3, y = 3:1, z = letters[1:3])
+my_df
+
+my_df[my_df$x == 2, ]
+
+my_df[c(1, 3), ]
+
+# There are two ways to select columns from a data frame
+# Like a list
+my_df[c("x", "z")]
+
+# Like a matrix
+my_df[, c("x", "z")]
+```
+
+- If we select a single column, matrix subsetting returns a simplified vector, while list subsetting returns a dataframe.
+- ```$``` operator also returns a *vector*
+
+```{r, echo = T}
+# subset like a list, returns a 1-column data frame
+str(my_df["x"])
+
+# subset like a matrix, returns a vector
+str(my_df[, "x"])
+
+# subset with $, returns a vector
+str(my_df$x)
+```
+
+## Condition (if - else)
+The basic form of an if statement in R is as follows: 
+- Condition to evaluate must have a single value of either ```TRUE``` or ```FALSE```
+- Condition is wrapped inside ```( )```
+- Typically the actions are compound statements contained within ```{ }```
+
+```
+if (condition) { true_action }
+if (condition) { true_action } else { false_action }
+```
+
+```{r, echo = T}
+x = 56.1
+
+if (x > 90) {
+  print("A")
+} else if (x > 80) {
+  print("B")
+} else if (x > 50) {
+  print("C")
+} else {
+  print("F")
+}
+
+```
+
+## switch statememt
+Closely related to if is the switch()-statement. It's a compact, special purpose equivalent that lets you replace code like:
+```{r, echo = T}
+x = "a"
+if (x == "a") {
+  "option 1"
+} else if (x == "b") {
+  "option 2" 
+} else if (x == "c") {
+  "option 3"
+} else {
+  stop("Invalid `x` value")
+}
+```
+with the more succinct:
+
+```{r, echo = T}
+x = "a"
+switch(x,
+  a = "option 1",
+  b = "option 2",
+  c = "option 3",
+  stop("Invalid `x` value")
+)
+```
+
+## Looping with for
+- ```for``` loops are used to iterate over items in a vector. They have the following basic form: (Notice the use of ```()``` and ```{}``` )
+
+```
+for (item in vector) { perform_action }
+```
+
+- For each item in vector, perform_action is called once; updating the value of item each time. Consider this very simple example (some one asked if we can use an index to iterate over a dataframe in the very first lecture, yes we can)
+
+```{r, echo = T}
+my_df <- data.frame("num_col" = 1:5, "letter_col"=letters[2:6], stringsAsFactors = FALSE)
+for (i in seq(nrow(my_df))) {
+  cat(my_df[i, 1], "is linked to" , my_df[i, "letter_col"], "in my_df \n")
+}
+```
+
+- The ```seq()``` function: generates a sequence of numbers.
+```{r, echo = T}
+# create a vector from 1 to 10 (starts from 1 by default)
+seq(10)
+
+seq(nrow(my_df))
+
+# from -10 to 20, increment by 3
+seq(from = -10, to = 20, by = 3) 
+```
+
+## Looping with for (cont. ) - Terminate a loop early
+- ```next``` exits the current iteration, and move to the next iteration
+- ```break``` exits the entire for loop.
+
+```{r, echo = T}
+for (i in 1:10) {
+  if (i < 3) 
+    next
+
+  print(i)
+  
+  if (i >= 5)
+    break
+}
+```
+
+## Looping with While and repeat
+- ```for``` loops are useful if you know in advance the set of values that you want to iterate over. If you don't know, there are two related tools with more flexible specifications:
+
+- ```while(condition) action``` : performs action while condition is TRUE.
+
+- ```repeat(action)``` : repeats action forever (i.e. until it encounters break).
+
+-  does not have an equivalent to the do {action} while (condition) syntax found in other languages.
+
+- We can rewrite any ```for``` loop to use ```while``` instead, and you can rewrite any ```while``` loop to use ```repeat```, but the converses are NOT true. That means while is more flexible than for, and repeat is more flexible than while. It's good practice, however, to use the least-flexible solution to a problem, so you should use for wherever possible.
+
+```{r, echo = T}
+# Example with while
+i = 3
+while(i <= 5) {
+  print(i)
+  i = i + 1 # there should be an increment to update the index. What happend if we dont?
+}
+```
+
+```{r, echo = T}
+# Example with repeat
+i = 3
+repeat {
+  print(i)
+  if (i >= 5)
+    break
+  i = i + 1 # there should be an increment to update the index. What happend if we dont?
+}
+```
+
+
+## The apply family functions
+- Manipulate slices of data from matrices, arrays, lists and dataframes in a repetitive way.
+- Cross the data in a number of ways and avoid explicit use of loop constructs
+- Act on an input list, matrix or array and apply a named function with one or several optional arguments
+- Made up of the apply(), lapply() , sapply(), vapply(), mapply(), rapply(), and tapply()
+
+## How to use apply()
+Operates on arrays (including the 2D matrices). General function call:
+```
+apply(X, MARGIN, FUN, ...)
+```
+Where:
+- X is an array or a matrix
+- MARGIN is a variable defining how the function is applied: when MARGIN=1, it applies over rows, whereas with MARGIN=2, it works over columns. If MARGIN=c(1,2), it applies to both rows and columns; and
+- FUN, which is the function that you want to apply to the data. 
+
+```{r, echo = T}
+# Construct a 5x6 matrix
+X <- matrix(rnorm(30), nrow=5, ncol=6)
+X
+
+# Sum the values of each column with `apply()`
+apply(X, MARGIN=2, FUN=sum)
+```
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
